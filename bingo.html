@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bingo do Prof Generator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            text-align: center;
+        }
+
+        .grid-container {
+            display: grid;
+            gap: 2px;
+            margin: 20px auto;
+            max-width: 500px;
+            width: 100%;
+            max-height: 80vh;
+            overflow: hidden;
+            box-sizing: border-box;
+        }
+
+        .grid-item {
+            border: 1px solid black;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 18px;
+            background-color: #f0f0f0;
+            aspect-ratio: 1 / 1;
+            width: 100%;
+            height: 100%;
+            position: relative;
+            box-sizing: border-box;
+        }
+
+        .mark-buttons {
+            display: none;
+            position: absolute;
+            bottom: 5px;
+            left: 50%;
+            transform: translateX(-50%);
+            gap: 5px;
+        }
+
+        .grid-item:hover .mark-buttons {
+            display: flex;
+        }
+
+        .mark-button {
+            cursor: pointer;
+            padding: 5px 10px;
+            border: none;
+            font-size: 16px;
+            color: white;
+            border-radius: 4px;
+        }
+
+        .mark-x {
+            background-color: red;
+        }
+
+        .mark-check {
+            background-color: green;
+        }
+
+        .marked-x {
+            background-color: rgba(255, 0, 0, 0.5);
+        }
+
+        .marked-check {
+            background-color: rgba(0, 255, 0, 0.5);
+        }
+
+        #inputs-container {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Bingo Grid Generator</h1>
+    <label for="square-count">Quantos quadrados? </label>
+    <input type="number" id="square-count" min="1" max="100" value="15">
+    <button onclick="generateInputs()">Gerar Inputs</button>
+    <button onclick="generateRandomText()">Preencher com Texto Aleatório</button>
+
+    <div id="inputs-container"></div>
+    <button onclick="generateGrid()">Gerar Grid</button>
+
+    <div id="grid-container" class="grid-container"></div>
+    <button onclick="exportImage()">Exportar como PNG</button>
+    <button onclick="exportAsURL()">Exportar como URL</button>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script>
+        function generateInputs() {
+            const count = parseInt(document.getElementById("square-count").value, 10);
+            const container = document.getElementById("inputs-container");
+            container.innerHTML = "";
+
+            for (let i = 0; i < count; i++) {
+                const input = document.createElement("input");
+                input.type = "text";
+                input.maxLength = 40;
+                input.placeholder = `Texto ${i + 1}`;
+                container.appendChild(input);
+            }
+        }
+
+        function generateRandomText() {
+            const inputs = document.querySelectorAll("#inputs-container input");
+            const randomText = () => Math.random().toString(36).substring(7);
+
+            inputs.forEach(input => {
+                input.value = randomText();
+            });
+        }
+
+        function generateGrid() {
+            const inputs = document.querySelectorAll("#inputs-container input");
+            const gridContainer = document.getElementById("grid-container");
+            const count = inputs.length;
+            const gridSize = Math.ceil(Math.sqrt(count));
+
+            gridContainer.style.gridTemplateColumns = `repeat(${gridSize}, 1fr)`;
+            gridContainer.style.gridTemplateRows = `repeat(${gridSize}, 1fr)`;
+            gridContainer.innerHTML = "";
+
+            inputs.forEach((input, index) => {
+                const div = document.createElement("div");
+                div.className = "grid-item";
+                div.textContent = input.value || "-";
+
+                // Botões de marcação
+                const markButtons = document.createElement("div");
+                markButtons.className = "mark-buttons";
+
+                const markXButton = document.createElement("button");
+                markXButton.className = "mark-button mark-x";
+                markXButton.textContent = "X";
+                markXButton.onclick = () => markSquare(div, "x");
+
+                const markCheckButton = document.createElement("button");
+                markCheckButton.className = "mark-button mark-check";
+                markCheckButton.textContent = "✓";
+                markCheckButton.onclick = () => markSquare(div, "check");
+
+                markButtons.appendChild(markXButton);
+                markButtons.appendChild(markCheckButton);
+                div.appendChild(markButtons);
+
+                gridContainer.appendChild(div);
+            });
+        }
+
+        function markSquare(square, type) {
+            square.classList.remove("marked-x", "marked-check");
+            if (type === "x") {
+                square.classList.add("marked-x");
+            } else if (type === "check") {
+                square.classList.add("marked-check");
+            }
+        }
+
+        function exportImage() {
+            const gridContainer = document.getElementById("grid-container");
+
+            // Adicionar o texto do rodapé dinamicamente
+            const footerText = "Bingo do Prof";
+            const footer = document.createElement("div");
+            footer.style.position = "absolute";
+            footer.style.bottom = "0";  // Garante que o rodapé ficará na parte inferior
+            footer.style.left = "0";
+            footer.style.width = "100%";
+            footer.style.textAlign = "center";
+            footer.style.fontSize = "20px";
+            footer.style.color = "white";  // Cor do texto
+            footer.style.backgroundColor = "black";  // Cor de fundo do rodapé
+            footer.style.padding = "10px 0";  // Ajuste o espaçamento do rodapé
+            footer.textContent = footerText;
+
+            // Adiciona o rodapé ao grid antes de capturar
+            document.body.appendChild(footer);
+
+            // Usar html2canvas para capturar a tela inteira com o rodapé
+            html2canvas(gridContainer, { scale: 2 }).then(canvas => {
+                const ctx = canvas.getContext("2d");
+
+                // Captura do rodapé
+                const footerHeight = 40; // altura do rodapé (ajustar conforme necessário)
+
+                // Redefine o canvas para garantir que o rodapé caiba na imagem
+                const finalCanvas = document.createElement("canvas");
+                finalCanvas.width = canvas.width;
+                finalCanvas.height = canvas.height + footerHeight;
+                const finalCtx = finalCanvas.getContext("2d");
+
+                // Desenha a imagem original
+                finalCtx.drawImage(canvas, 0, 0);
+
+                // Adiciona o texto do rodapé no final
+                finalCtx.font = "20px Arial";
+                finalCtx.fillStyle = "white";  // Cor do texto
+                finalCtx.textAlign = "center";
+                finalCtx.fillText(footerText, finalCanvas.width / 2, finalCanvas.height - 10);  // Coloca o texto no final
+
+                // Criar o link para download da imagem
+                const link = document.createElement("a");
+                link.download = "bingo-grid.png";
+                link.href = finalCanvas.toDataURL("image/png");
+                link.click();
+
+                // Remover o rodapé da página depois de capturar
+                document.body.removeChild(footer);
+            });
+        }
+
+
+
+
+        function exportAsURL() {
+            const gridItems = document.querySelectorAll(".grid-item");
+            const configuration = {
+                squareCount: gridItems.length,
+                texts: Array.from(gridItems).map(item => item.textContent || "-"),
+                marks: Array.from(gridItems).map(item => {
+                    if (item.classList.contains("marked-x")) return "x";
+                    if (item.classList.contains("marked-check")) return "check";
+                    return null;
+                })
+            };
+
+            const json = JSON.stringify(configuration);
+
+            // Converte o JSON para UTF-8 e depois para Base64
+            const encoded = utf8ToBase64(json);
+
+            const url = `${window.location.origin}${window.location.pathname}?config=${encoded}`;
+
+            const urlContainer = document.createElement("div");
+            urlContainer.textContent = "URL gerada: ";
+            const link = document.createElement("a");
+            link.href = url;
+            link.textContent = url;
+            link.target = "_blank";
+            urlContainer.appendChild(link);
+
+            document.body.appendChild(urlContainer);
+        }
+
+        function utf8ToBase64(str) {
+            return btoa(unescape(encodeURIComponent(str)));
+        }
+
+        // Carregar a configuração da URL, caso exista
+        importFromURL();
+
+        function importFromURL() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const config = urlParams.get("config");
+
+            if (config) {
+                try {
+                    const decoded = decodeURIComponent(escape(atob(config)));
+                    const configuration = JSON.parse(decoded);
+
+                    document.getElementById("square-count").value = configuration.squareCount;
+
+                    generateInputs();
+                    const inputs = document.querySelectorAll("#inputs-container input");
+                    configuration.texts.forEach((text, index) => {
+                        if (inputs[index]) inputs[index].value = text;
+                    });
+
+                    // Adicionar as marcações
+                    const gridItems = document.querySelectorAll(".grid-item");
+                    configuration.marks.forEach((mark, index) => {
+                        if (gridItems[index]) {
+                            if (mark === "x") gridItems[index].classList.add("marked-x");
+                            else if (mark === "check") gridItems[index].classList.add("marked-check");
+                        }
+                    });
+
+                    alert("Configuração carregada da URL!");
+                } catch (error) {
+                    alert("Erro ao carregar configuração da URL.");
+                }
+            }
+        }
+    </script>
+</body>
+
+</html>
