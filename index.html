@@ -135,7 +135,6 @@
                 div.className = "grid-item";
                 div.textContent = input.value || "-";
 
-                // Botões de marcação
                 const markButtons = document.createElement("div");
                 markButtons.className = "mark-buttons";
 
@@ -169,52 +168,45 @@
         function exportImage() {
             const gridContainer = document.getElementById("grid-container");
 
-            // Adicionar o texto do rodapé dinamicamente
-            const footerText = "Bingo do Prof";
+            const footerText = "Gerado em tiagox42.github.io/BingoDoProfessor";
             const footer = document.createElement("div");
             footer.style.position = "absolute";
-            footer.style.bottom = "0";  // Garante que o rodapé ficará na parte inferior
+            footer.style.bottom = "0";  
             footer.style.left = "0";
             footer.style.width = "100%";
             footer.style.textAlign = "center";
             footer.style.fontSize = "20px";
-            footer.style.color = "white";  // Cor do texto
-            footer.style.backgroundColor = "black";  // Cor de fundo do rodapé
-            footer.style.padding = "10px 0";  // Ajuste o espaçamento do rodapé
+            footer.style.color = "white";  
+            footer.style.backgroundColor = "black";  
+            footer.style.padding = "10px 0";  
             footer.textContent = footerText;
 
-            // Adiciona o rodapé ao grid antes de capturar
+            
             document.body.appendChild(footer);
 
-            // Usar html2canvas para capturar a tela inteira com o rodapé
+            
             html2canvas(gridContainer, { scale: 2 }).then(canvas => {
                 const ctx = canvas.getContext("2d");
+                
+                const footerHeight = 40; 
 
-                // Captura do rodapé
-                const footerHeight = 40; // altura do rodapé (ajustar conforme necessário)
-
-                // Redefine o canvas para garantir que o rodapé caiba na imagem
                 const finalCanvas = document.createElement("canvas");
                 finalCanvas.width = canvas.width;
                 finalCanvas.height = canvas.height + footerHeight;
                 const finalCtx = finalCanvas.getContext("2d");
 
-                // Desenha a imagem original
                 finalCtx.drawImage(canvas, 0, 0);
 
-                // Adiciona o texto do rodapé no final
                 finalCtx.font = "20px Arial";
-                finalCtx.fillStyle = "white";  // Cor do texto
+                finalCtx.fillStyle = "white";
                 finalCtx.textAlign = "center";
-                finalCtx.fillText(footerText, finalCanvas.width / 2, finalCanvas.height - 10);  // Coloca o texto no final
+                finalCtx.fillText(footerText, finalCanvas.width / 2, finalCanvas.height - 10); 
 
-                // Criar o link para download da imagem
                 const link = document.createElement("a");
                 link.download = "bingo-grid.png";
                 link.href = finalCanvas.toDataURL("image/png");
                 link.click();
 
-                // Remover o rodapé da página depois de capturar
                 document.body.removeChild(footer);
             });
         }
@@ -236,7 +228,6 @@
 
             const json = JSON.stringify(configuration);
 
-            // Converte o JSON para UTF-8 e depois para Base64
             const encoded = utf8ToBase64(json);
 
             const url = `${window.location.origin}${window.location.pathname}?config=${encoded}`;
@@ -256,7 +247,6 @@
             return btoa(unescape(encodeURIComponent(str)));
         }
 
-        // Carregar a configuração da URL, caso exista
         importFromURL();
 
         function importFromURL() {
@@ -276,7 +266,6 @@
                         if (inputs[index]) inputs[index].value = text;
                     });
 
-                    // Adicionar as marcações
                     const gridItems = document.querySelectorAll(".grid-item");
                     configuration.marks.forEach((mark, index) => {
                         if (gridItems[index]) {
